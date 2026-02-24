@@ -1,0 +1,33 @@
+{
+  "name": "nifty-aday-alerts",
+  "version": "1.0.0",
+  "description": "Automated alert system for NIFTY A-Day trading setups - sends WhatsApp, Email, and SMS notifications",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js"
+  },
+  "keywords": [
+    "nifty",
+    "trading",
+    "alerts",
+    "zerodha",
+    "kite",
+    "angel-one",
+    "smartapi"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "kiteconnect": "^5.0.0",
+    "node-cron": "^3.0.3",
+    "nodemailer": "^6.9.7",
+    "otplib": "^13.3.0",
+    "smartapi-javascript": "^1.0.27",
+    "speakeasy": "^2.0.0",
+    "twilio": "^4.19.0",
+    "winston": "^3.11.0"
+  }
+}

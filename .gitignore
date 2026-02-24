@@ -1,0 +1,19 @@
+# Dependencies
+node_modules/
+
+# Environment variables (NEVER commit credentials)
+.env
+
+# Logs
+logs/
+*.log
+
+# Claude Code local state
+.claude/
+
+# OS files
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
