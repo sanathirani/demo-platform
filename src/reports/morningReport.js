@@ -289,6 +289,185 @@ function generateTodaySetup(prevDay) {
   };
 }
 
+/**
+ * Format day name from date string
+ * @param {string} dateStr - Date in YYYY-MM-DD format
+ * @returns {string} Day name (Mon, Tue, etc.)
+ */
+function getDayName(dateStr) {
+  const date = new Date(dateStr + 'T00:00:00+05:30');
+  return date.toLocaleDateString('en-US', { weekday: 'short' });
+}
+
+/**
+ * Format report as HTML email
+ * @param {Object} report - Report data
+ * @returns {string} HTML content
+ */
+function formatReportHTML(report) {
+  const dayCards = report.days.map(day => {
+    const changeColor = day.change >= 0 ? '#28a745' : '#dc3545';
+    const changeArrow = day.change >= 0 ? '▲' : '▼';
+    const dayTypeColor = day.dayType === 'A-DAY'
+      ? (day.dayDirection === 'BULLISH' ? '#28a745' : '#dc3545')
+      : day.dayType === 'VOLATILE' ? '#fd7e14' : '#6c757d';
+
+    return `
+    <div style="background: #f8f9fa; border-radius: 8px; padding: 20px; margin: 15px 0; border-left: 4px solid ${dayTypeColor};">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+        <div>
+          <span style="font-size: 18px; font-weight: bold;">${day.date}</span>
+          <span style="color: #666; margin-left: 10px;">(${getDayName(day.date)})</span>
+        </div>
+        <span style="background: ${dayTypeColor}; color: white; padding: 5px 15px; border-radius: 20px; font-weight: bold;">
+          ${day.dayType}${day.dayDirection ? ` (${day.dayDirection})` : ''}
+        </span>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 15px;">
+        <div style="background: white; padding: 10px; border-radius: 4px; text-align: center;">
+          <div style="font-size: 11px; color: #666; text-transform: uppercase;">Open</div>
+          <div style="font-size: 16px; font-weight: bold;">${day.open.toFixed(0)}</div>
+        </div>
+        <div style="background: white; padding: 10px; border-radius: 4px; text-align: center;">
+          <div style="font-size: 11px; color: #666; text-transform: uppercase;">High</div>
+          <div style="font-size: 16px; font-weight: bold; color: #28a745;">${day.high.toFixed(0)}</div>
+        </div>
+        <div style="background: white; padding: 10px; border-radius: 4px; text-align: center;">
+          <div style="font-size: 11px; color: #666; text-transform: uppercase;">Low</div>
+          <div style="font-size: 16px; font-weight: bold; color: #dc3545;">${day.low.toFixed(0)}</div>
+        </div>
+        <div style="background: white; padding: 10px; border-radius: 4px; text-align: center;">
+          <div style="font-size: 11px; color: #666; text-transform: uppercase;">Close</div>
+          <div style="font-size: 16px; font-weight: bold;">${day.close.toFixed(0)}</div>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px;">
+        <div style="background: white; padding: 10px; border-radius: 4px; text-align: center;">
+          <div style="font-size: 11px; color: #666;">Change</div>
+          <div style="font-size: 14px; font-weight: bold; color: ${changeColor};">${changeArrow} ${Math.abs(day.change)} pts (${day.changePercent}%)</div>
+        </div>
+        <div style="background: white; padding: 10px; border-radius: 4px; text-align: center;">
+          <div style="font-size: 11px; color: #666;">Range</div>
+          <div style="font-size: 14px; font-weight: bold;">${day.range} pts</div>
+        </div>
+        <div style="background: white; padding: 10px; border-radius: 4px; text-align: center;">
+          <div style="font-size: 11px; color: #666;">Body Ratio</div>
+          <div style="font-size: 14px; font-weight: bold;">${day.bodyRatio}%</div>
+        </div>
+      </div>
+
+      <div style="background: #e7f3ff; padding: 12px; border-radius: 4px; margin-bottom: 10px;">
+        <div style="font-weight: bold; margin-bottom: 8px; color: #1a73e8;">Day Behavior:</div>
+        <div style="font-size: 13px; line-height: 1.6;">
+          • ${day.behavior.gapAnalysis}<br/>
+          • ${day.behavior.closeAnalysis}<br/>
+          • ${day.behavior.trendPattern}
+        </div>
+      </div>
+
+      <div style="font-size: 12px; color: #666;">
+        <strong>Key Levels:</strong> PDH: ${day.levels.pdh} | PDL: ${day.levels.pdl} | Pivot: ${day.levels.pivot} | R1: ${day.levels.r1} | S1: ${day.levels.s1}
+      </div>
+    </div>`;
+  }).join('');
+
+  const summary = report.weeklySummary;
+  const setup = report.todaySetup;
+  const setupColor = setup.systemActive ? '#28a745' : '#fd7e14';
+
+  return `
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 700px; margin: 0 auto; background: #f5f5f5; }
+    .header { background: linear-gradient(135deg, #1a73e8, #4285f4); color: white; padding: 25px; text-align: center; border-radius: 8px 8px 0 0; }
+    .content { background: white; padding: 25px; }
+    .section-title { font-size: 16px; font-weight: bold; color: #333; margin: 25px 0 15px 0; padding-bottom: 10px; border-bottom: 2px solid #1a73e8; }
+    .footer { text-align: center; padding: 20px; color: #999; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1 style="margin: 0;">Morning Briefing</h1>
+    <p style="margin: 10px 0 0 0; opacity: 0.9;">${report.reportDate} | Generated at ${report.generatedAt}</p>
+  </div>
+
+  <div class="content">
+    <div class="section-title">LAST 5 TRADING DAYS - DETAILED ANALYSIS</div>
+    ${dayCards}
+
+    <div class="section-title">WEEKLY SUMMARY</div>
+    <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
+      <div>
+        <div style="color: #666; font-size: 12px;">A-Days</div>
+        <div style="font-size: 20px; font-weight: bold;">${summary.aDayCount} <span style="font-size: 14px; color: #666;">(${summary.aDayBullish} Bull, ${summary.aDayBearish} Bear)</span></div>
+      </div>
+      <div>
+        <div style="color: #666; font-size: 12px;">C-Days</div>
+        <div style="font-size: 20px; font-weight: bold;">${summary.cDayCount}</div>
+      </div>
+      <div>
+        <div style="color: #666; font-size: 12px;">Net Change</div>
+        <div style="font-size: 20px; font-weight: bold; color: ${summary.netChange >= 0 ? '#28a745' : '#dc3545'};">${summary.netChange >= 0 ? '+' : ''}${summary.netChange} pts (${summary.netChangePercent}%)</div>
+      </div>
+      <div>
+        <div style="color: #666; font-size: 12px;">Avg Daily Range</div>
+        <div style="font-size: 20px; font-weight: bold;">${summary.avgRange} pts</div>
+      </div>
+    </div>
+
+    <div class="section-title">TODAY'S SETUP</div>
+    <div style="background: ${setupColor}15; border-left: 4px solid ${setupColor}; padding: 20px; border-radius: 0 8px 8px 0;">
+      <div style="font-size: 18px; font-weight: bold; margin-bottom: 10px;">
+        Previous Day: ${setup.prevDayType}${setup.prevDayDirection ? ` (${setup.prevDayDirection})` : ''}
+      </div>
+      <div style="margin-bottom: 10px;">
+        <strong>System Status:</strong>
+        <span style="background: ${setupColor}; color: white; padding: 3px 10px; border-radius: 10px; font-size: 12px;">
+          ${setup.systemActive ? 'ACTIVE' : 'INACTIVE'}
+        </span>
+      </div>
+      <div style="margin-bottom: 10px;"><strong>Expectation:</strong> ${setup.expectation}</div>
+      <div><strong>Watch:</strong> ${setup.watchLevels}</div>
+    </div>
+  </div>
+
+  <div class="footer">
+    A-Day Trading Alert System • Morning Briefing
+  </div>
+</body>
+</html>`;
+}
+
+/**
+ * Send morning report via email
+ * @returns {Promise<Object>} Report data
+ */
+async function sendMorningReport() {
+  try {
+    // Login to broker if needed
+    if (!brokerService.isAuthenticated()) {
+      await brokerService.login();
+    }
+
+    const report = await generateMorningReport();
+    const htmlReport = formatReportHTML(report);
+
+    const subject = `Morning Briefing: ${report.reportDate} | ${report.todaySetup.prevDayType}${report.todaySetup.prevDayDirection ? ` (${report.todaySetup.prevDayDirection})` : ''} | System ${report.todaySetup.systemActive ? 'ACTIVE' : 'INACTIVE'}`;
+
+    await alertService.sendEmail(subject, htmlReport);
+
+    logger.info('Morning report sent', { date: report.reportDate });
+    return report;
+  } catch (error) {
+    logger.error('Failed to send morning report', { error: error.message });
+    throw error;
+  }
+}
+
 module.exports = {
   classifyDayType,
   analyzeDayBehavior,
@@ -297,4 +476,6 @@ module.exports = {
   generateMorningReport,
   calculateWeeklySummary,
   generateTodaySetup,
+  formatReportHTML,
+  sendMorningReport,
 };
