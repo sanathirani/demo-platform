@@ -503,8 +503,9 @@ async function checkSignals() {
  * Generate 15-minute market update email
  */
 async function sendMarketUpdate() {
-  // Only send if running and market is open
-  if (!isRunning || !isMarketOpen()) {
+  // Only send if market is open (no longer requires isRunning)
+  if (!isMarketOpen()) {
+    logger.info('Market update skipped - market is closed');
     return;
   }
 
