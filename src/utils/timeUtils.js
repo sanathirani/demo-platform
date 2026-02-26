@@ -191,6 +191,31 @@ function getTradingDaysAgo(days) {
 }
 
 /**
+ * Get array of last N trading days (most recent first)
+ * @param {number} n - Number of trading days
+ * @returns {Date[]} Array of dates
+ */
+function getLastNTradingDays(n) {
+  const days = [];
+  const date = new Date(getISTNow());
+
+  // Start from previous trading day (not today)
+  date.setDate(date.getDate() - 1);
+  while (date.getDay() === 0 || date.getDay() === 6) {
+    date.setDate(date.getDate() - 1);
+  }
+
+  while (days.length < n) {
+    if (date.getDay() !== 0 && date.getDay() !== 6) {
+      days.push(new Date(date));
+    }
+    date.setDate(date.getDate() - 1);
+  }
+
+  return days;
+}
+
+/**
  * Format time for display in alerts
  * @param {Date} date
  * @returns {string} e.g., "10:02 AM"
@@ -229,6 +254,7 @@ module.exports = {
   getPreviousTradingDay,
   getLastCompletedTradingDay,
   getTradingDaysAgo,
+  getLastNTradingDays,
   formatTimeForAlert,
   sleep,
 };
