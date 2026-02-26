@@ -26,7 +26,13 @@ const config = {
     secretKey: process.env.ANGEL_SECRET_KEY,
   },
 
-  // Twilio (WhatsApp + SMS)
+  // Telegram Bot (Primary notification channel)
+  telegram: {
+    botToken: process.env.TELEGRAM_BOT_TOKEN,
+    chatId: process.env.TELEGRAM_CHAT_ID,
+  },
+
+  // Twilio (WhatsApp + SMS) - Legacy, Telegram preferred
   twilio: {
     accountSid: process.env.TWILIO_ACCOUNT_SID,
     authToken: process.env.TWILIO_AUTH_TOKEN,
@@ -56,6 +62,11 @@ const config = {
     lotSize: 25,
   },
 
+  // Confidence Scoring
+  confidence: {
+    minScore: parseInt(process.env.MIN_CONFIDENCE_SCORE, 10) || 60,
+  },
+
   // Server Config
   server: {
     port: parseInt(process.env.PORT, 10) || 3000,
@@ -72,23 +83,39 @@ const config = {
     pullbackEndTime: '13:30',
     expiryStartTime: '11:00',
     expiryEndTime: '14:00',
+    vwapStartTime: '10:00',
+    vwapEndTime: '14:30',
+    srStartTime: '09:45',
+    srEndTime: '14:30',
+    dayBehaviorStartTime: '10:15',
+    dayBehaviorEndTime: '14:00',
+    postMarketReportTime: '15:45',
   },
 };
 
 /**
  * Validate required configuration based on selected broker
- * @returns {Object} { isValid: boolean, missingKeys: string[] }
+ * @returns {Object} { isValid: boolean, missingKeys: string[], warnings: string[] }
  */
 function validateConfig() {
-  // Common required keys (alerts/notifications)
+  const warnings = [];
+
+  // Common required keys (Email is required, Telegram is recommended)
   const commonKeys = [
-    { key: 'twilio.accountSid', value: config.twilio.accountSid },
-    { key: 'twilio.authToken', value: config.twilio.authToken },
     { key: 'email.user', value: config.email.user },
     { key: 'email.appPassword', value: config.email.appPassword },
-    { key: 'alerts.phone', value: config.alerts.phone },
     { key: 'alerts.email', value: config.alerts.email },
   ];
+
+  // Telegram is recommended but not required
+  if (!config.telegram.botToken || !config.telegram.chatId) {
+    warnings.push('Telegram not configured - only email alerts will be sent');
+  }
+
+  // Twilio is optional (legacy)
+  if (!config.twilio.accountSid) {
+    warnings.push('Twilio not configured - WhatsApp/SMS disabled (Telegram preferred)');
+  }
 
   // Broker-specific required keys
   let brokerKeys = [];
@@ -116,6 +143,7 @@ function validateConfig() {
   return {
     isValid: missingKeys.length === 0,
     missingKeys,
+    warnings,
   };
 }
 

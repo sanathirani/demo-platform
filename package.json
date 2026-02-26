@@ -27,6 +27,7 @@
     "otplib": "^13.3.0",
     "smartapi-javascript": "^1.0.27",
     "speakeasy": "^2.0.0",
+    "telegraf": "^4.16.3",
     "twilio": "^4.19.0",
     "winston": "^3.11.0"
   }
