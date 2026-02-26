@@ -43,6 +43,7 @@ const safetyFilter = require('./filters/safetyFilter');
 
 // Reports
 const postMarketReport = require('./reports/postMarketReport');
+const morningReport = require('./reports/morningReport');
 
 // Simulation
 const simulationService = require('./services/simulationService');
@@ -282,6 +283,29 @@ app.post('/post-market-report', async (req, res) => {
     });
   } catch (error) {
     logger.error('Post-market report failed', { error: error.message });
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
+
+/**
+ * Manual morning report endpoint
+ */
+app.post('/morning-report', async (req, res) => {
+  try {
+    if (!brokerService.isAuthenticated()) {
+      await brokerService.login();
+    }
+    const report = await morningReport.sendMorningReport();
+    res.json({
+      success: true,
+      message: 'Morning report sent',
+      report,
+    });
+  } catch (error) {
+    logger.error('Morning report failed', { error: error.message });
     res.status(500).json({
       success: false,
       error: error.message,
@@ -909,6 +933,16 @@ cron.schedule('45 15 * * 1-5', () => {
   timezone: 'Asia/Kolkata',
 });
 
+// 7:00 AM - Morning report (5-day analysis)
+cron.schedule('0 7 * * 1-5', () => {
+  logger.info('Cron: 7:00 AM - Sending morning report');
+  morningReport.sendMorningReport().catch(err => {
+    logger.error('Morning report cron failed', { error: err.message });
+  });
+}, {
+  timezone: 'Asia/Kolkata',
+});
+
 // ============================================
 // Startup
 // ============================================
@@ -944,6 +978,7 @@ async function main() {
     logger.info(`  POST /force-analyze/off - Disable force analyze`);
     logger.info(`  POST /market-update     - Send market update email now`);
     logger.info(`  POST /post-market-report - Send post-market report`);
+    logger.info(`  POST /morning-report    - Send morning report`);
     logger.info(`  GET  /levels            - Get S/R levels`);
     logger.info(`  GET  /oi                - Get OI analysis`);
     logger.info(`  GET  /simulate-day      - Simulate with historical data`);
@@ -956,6 +991,7 @@ async function main() {
     logger.info('  Every 15 min - Market update email (9:45 AM - 3:15 PM)');
     logger.info('  3:30 PM      - End day');
     logger.info('  3:45 PM      - Post-market report');
+    logger.info('  7:00 AM      - Morning report (5-day analysis)');
     logger.info('');
     logger.info('Strategies registered:');
     for (const [name] of strategyEngine.getAllStrategies()) {
