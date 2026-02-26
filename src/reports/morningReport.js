@@ -450,20 +450,27 @@ async function sendMorningReport() {
   try {
     // Login to broker if needed
     if (!brokerService.isAuthenticated()) {
+      logger.info('Morning report: Logging in to broker...');
       await brokerService.login();
     }
 
+    logger.info('Morning report: Generating report...');
     const report = await generateMorningReport();
+
+    logger.info('Morning report: Formatting HTML...', { days: report.days.length });
     const htmlReport = formatReportHTML(report);
+
+    logger.info('Morning report: HTML generated', { htmlSize: htmlReport.length });
 
     const subject = `Morning Briefing: ${report.reportDate} | ${report.todaySetup.prevDayType}${report.todaySetup.prevDayDirection ? ` (${report.todaySetup.prevDayDirection})` : ''} | System ${report.todaySetup.systemActive ? 'ACTIVE' : 'INACTIVE'}`;
 
+    logger.info('Morning report: Sending email...', { subject });
     await alertService.sendEmail(subject, htmlReport);
 
-    logger.info('Morning report sent', { date: report.reportDate });
+    logger.info('Morning report sent successfully', { date: report.reportDate });
     return report;
   } catch (error) {
-    logger.error('Failed to send morning report', { error: error.message });
+    logger.error('Failed to send morning report', { error: error.message, stack: error.stack });
     throw error;
   }
 }
