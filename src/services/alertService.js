@@ -28,6 +28,9 @@ function getEmailTransporter() {
         user: config.email.user,
         pass: config.email.appPassword,
       },
+      connectionTimeout: 30000, // 30 seconds
+      greetingTimeout: 30000,
+      socketTimeout: 60000,
     });
   }
   return emailTransporter;
