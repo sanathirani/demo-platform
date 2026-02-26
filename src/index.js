@@ -372,8 +372,7 @@ Time: ${formatTimeForAlert(new Date())}`;
  * Capture ORB range (9:30 AM)
  */
 async function captureORB() {
-  // Capture ORB if A-Day OR forceAnalyzeMode is enabled
-  if (!isRunning || (!todayIsADay && !forceAnalyzeMode)) {
+  if (!isRunning) {
     return;
   }
 
@@ -392,8 +391,7 @@ async function captureORB() {
 async function checkAllStrategies() {
   const signals = [];
 
-  // Run if A-Day OR forceAnalyzeMode is enabled
-  if (!isRunning || (!todayIsADay && !forceAnalyzeMode)) {
+  if (!isRunning) {
     return signals;
   }
 
@@ -443,8 +441,8 @@ async function checkAllStrategies() {
  * @param {Array} signals - Array of signals to process
  */
 async function processSignals(signals) {
-  // Check if this is a C-Day signal (forceAnalyzeMode enabled but not an A-Day)
-  const isCDaySignal = !todayIsADay && forceAnalyzeMode;
+  // Check if this is a C-Day signal (not an A-Day)
+  const isCDaySignal = !todayIsADay;
 
   for (const signal of signals) {
     try {
@@ -485,8 +483,7 @@ async function processSignals(signals) {
  * Main signal check loop (every minute)
  */
 async function checkSignals() {
-  // Run if A-Day OR forceAnalyzeMode is enabled
-  if (!isRunning || (!todayIsADay && !forceAnalyzeMode) || !isMarketOpen()) {
+  if (!isRunning || !isMarketOpen()) {
     return;
   }
 
