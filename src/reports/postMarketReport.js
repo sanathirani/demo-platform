@@ -15,7 +15,7 @@ const brokerService = require('../services/brokerService');
 const alertService = require('../services/alertService');
 const telegramService = require('../services/telegramService');
 const { logger } = require('../utils/logger');
-const { formatDateForKite, getISTNow, formatTimeForAlert } = require('../utils/timeUtils');
+const { formatDateForKite, getISTNow, formatTimeForAlert, getLastCompletedTradingDay } = require('../utils/timeUtils');
 const reversalDetector = require('../analyzers/reversalDetector');
 const oiAnalyzer = require('../analyzers/oiAnalyzer');
 
@@ -51,7 +51,8 @@ function addSignal(signal) {
 async function generateReport(adayStatus = {}) {
   try {
     const now = getISTNow();
-    const today = formatDateForKite(now);
+    const reportDate = getLastCompletedTradingDay();
+    const today = formatDateForKite(reportDate);
 
     logger.info('Generating post-market report', { date: today });
 

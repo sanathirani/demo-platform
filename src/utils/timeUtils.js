@@ -145,6 +145,33 @@ function getPreviousTradingDay() {
 }
 
 /**
+ * Get the last completed trading day
+ * - If before 3:45 PM IST, returns previous trading day
+ * - If 3:45 PM or later on a weekday, returns today
+ * - On weekends, returns previous trading day (Friday)
+ * @returns {Date}
+ */
+function getLastCompletedTradingDay() {
+  const now = getISTNow();
+  const hours = now.getHours();
+  const minutes = now.getMinutes();
+  const day = now.getDay();
+
+  // On weekends, use previous trading day (Friday)
+  if (day === 0 || day === 6) {
+    return getPreviousTradingDay();
+  }
+
+  // If before 3:45 PM (post-market report time), use previous trading day
+  if (hours < 15 || (hours === 15 && minutes < 45)) {
+    return getPreviousTradingDay();
+  }
+
+  // If 3:45 PM or later on a weekday, use today
+  return now;
+}
+
+/**
  * Get date N trading days ago
  * @param {number} days - Number of trading days
  * @returns {Date}
@@ -200,6 +227,7 @@ module.exports = {
   formatDateForKite,
   formatDateForAngel,
   getPreviousTradingDay,
+  getLastCompletedTradingDay,
   getTradingDaysAgo,
   formatTimeForAlert,
   sleep,
